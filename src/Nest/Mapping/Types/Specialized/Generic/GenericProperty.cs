@@ -55,9 +55,7 @@ namespace Nest
 	[DebuggerDisplay("{DebugDisplay}")]
 	public class GenericProperty : DocValuesPropertyBase, IGenericProperty
 	{
-#pragma warning disable 618
-		public GenericProperty() : base(null) { }
-#pragma warning restore 618
+		public GenericProperty() : base(FieldType.Object) => this.TypeOverride = null;
 
 		public TermVectorOption? TermVector { get; set; }
 		public double? Boost { get; set; }
@@ -71,6 +69,11 @@ namespace Nest
 		public bool? Norms { get; set; }
 		public IndexOptions? IndexOptions { get; set; }
 		public string Analyzer { get; set; }
+		public string Type
+		{
+			get => this.TypeOverride;
+			set => this.TypeOverride = value;
+		}
 	}
 
 	/// <summary>
@@ -96,9 +99,9 @@ namespace Nest
 		int? IGenericProperty.PositionIncrementGap { get; set; }
 		IStringFielddata IGenericProperty.Fielddata { get; set; }
 
-#pragma warning disable 618
-		public GenericPropertyDescriptor() : base(null) { }
-#pragma warning restore 618
+		public GenericPropertyDescriptor() : base(FieldType.Object) => this.TypeOverride = null;
+
+		public GenericPropertyDescriptor<T> Type(string type) => Assign(a => this.TypeOverride = type);
 
 		public GenericPropertyDescriptor<T> Index(FieldIndexOption? index = FieldIndexOption.NotAnalyzed) => Assign(a => a.Index = index);
 

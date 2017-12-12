@@ -5,30 +5,27 @@ using Nest;
 using Tests.Framework;
 using Tests.Framework.Integration;
 using Tests.Framework.ManagedElasticsearch.Clusters;
+using Tests.Framework.MockData;
 
-namespace Tests.Indices.IndexSettings.IndexTemplates.PutIndexTemplate
+namespace Tests.Mapping.Types
 {
-	public class PutIndexTemplateApiTests
-		: ApiTestBase<WritableCluster, IPutIndexTemplateResponse, IPutIndexTemplateRequest, PutIndexTemplateDescriptor, PutIndexTemplateRequest>
+	public abstract class SingleMappingPropertyTestsBase
+		: ApiTestBase<ReadOnlyCluster, IPutIndexTemplateResponse, IPutIndexTemplateRequest, PutIndexTemplateDescriptor, PutIndexTemplateRequest>
 	{
-		public PutIndexTemplateApiTests(WritableCluster cluster, EndpointUsage usage) : base(cluster, usage)
-		{
-		}
+		protected SingleMappingPropertyTestsBase(ReadOnlyCluster cluster, EndpointUsage usage) : base(cluster, usage) { }
 
 		protected override LazyResponses ClientUsage() => Calls(
 			fluent: (client, f) => client.PutIndexTemplate(CallIsolatedValue, f),
 			fluentAsync: (client, f) => client.PutIndexTemplateAsync(CallIsolatedValue, f),
 			request: (client, r) => client.PutIndexTemplate(r),
 			requestAsync: (client, r) => client.PutIndexTemplateAsync(r)
-			);
+		);
 
 		protected override HttpMethod HttpMethod => HttpMethod.PUT;
-
 		protected override string UrlPath => $"/_template/{CallIsolatedValue}?create=false";
-
 		protected override bool SupportsDeserialization => false;
 
-		protected override object ExpectJson { get; } = new
+		protected override object ExpectJson => new
 		{
 			order = 1,
 			index_patterns = new [] {"nestx-*" },
@@ -45,10 +42,7 @@ namespace Tests.Indices.IndexSettings.IndexTemplates.PutIndexTemplate
 							{
 								match = "*",
 								match_mapping_type = "*",
-								mapping = new
-								{
-									index = "no"
-								}
+								mapping = this.SingleMappingJson
 							}
 						}
 					}
@@ -56,8 +50,9 @@ namespace Tests.Indices.IndexSettings.IndexTemplates.PutIndexTemplate
 			}
 		};
 
-		protected override PutIndexTemplateDescriptor NewDescriptor() => new PutIndexTemplateDescriptor(CallIsolatedValue);
+		protected abstract object SingleMappingJson { get;  }
 
+		protected override PutIndexTemplateDescriptor NewDescriptor() => new PutIndexTemplateDescriptor(CallIsolatedValue);
 		protected override Func<PutIndexTemplateDescriptor, IPutIndexTemplateRequest> Fluent => d => d
 			.Order(1)
 			.IndexPatterns("nestx-*")
@@ -69,15 +64,14 @@ namespace Tests.Indices.IndexSettings.IndexTemplates.PutIndexTemplate
 						.DynamicTemplate("base", dt => dt
 							.Match("*")
 							.MatchMappingType("*")
-							.Mapping(mm => mm
-								.Generic(g => g
-									.Index(FieldIndexOption.No)
-								)
-							)
+							.Mapping(FluentSingleMapping)
 						)
 					)
 				)
 			);
+
+		protected abstract Func<SingleMappingDescriptor<object>, IProperty> FluentSingleMapping { get; }
+		protected abstract IProperty InitializerSingleMapping { get; }
 
 		protected override PutIndexTemplateRequest Initializer => new PutIndexTemplateRequest(CallIsolatedValue)
 		{
@@ -98,10 +92,7 @@ namespace Tests.Indices.IndexSettings.IndexTemplates.PutIndexTemplate
 								{
 									Match = "*",
 									MatchMappingType = "*",
-									Mapping = new GenericProperty
-									{
-										Index = FieldIndexOption.No
-									}
+									Mapping = InitializerSingleMapping
 								}
 							}
 						}
