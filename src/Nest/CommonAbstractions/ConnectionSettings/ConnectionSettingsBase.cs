@@ -77,9 +77,6 @@ namespace Nest
 		private readonly IPropertyMappingProvider _propertyMappingProvider;
 		IPropertyMappingProvider IConnectionSettingsValues.PropertyMappingProvider => _propertyMappingProvider;
 
-		//todo hacky
-		internal StatefulSerializerFactory SerializerFactory { get; }
-
 		protected ConnectionSettingsBase(
 			IConnectionPool connectionPool,
 			IConnection connection,
@@ -98,8 +95,6 @@ namespace Nest
 			this._defaultIndices = new FluentDictionary<Type, string>();
 			this._defaultTypeNames = new FluentDictionary<Type, string>();
 			this._defaultRelationNames = new FluentDictionary<Type, string>();
-
-			this.SerializerFactory = new StatefulSerializerFactory();
 
 			this._inferrer = new Inferrer(this);
 		}
